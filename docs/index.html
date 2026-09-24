@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Barcode Generator</title>
+<style>
+  :root {
+    --primary: #4f5bd5;
+    --primary-dark: #3d47b0;
+    --bg-start: #eef1fb;
+    --bg-end: #f3eefb;
+    --card: #ffffff;
+    --border: #e5e7eb;
+    --text: #111827;
+    --muted: #6b7280;
+    --error: #dc2626;
+    --success-bg: #dcfce7;
+    --success-text: #15803d;
+    --dark-box: #0f172a;
+    --dark-box-text: #e2e8f0;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+    background: linear-gradient(135deg, var(--bg-start), var(--bg-end));
+    color: var(--text);
+    padding: 24px 16px;
+    min-height: 100vh;
+  }
+  .container {
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+  h1 {
+    font-size: 1.6rem;
+    text-align: center;
+    margin: 0 0 24px;
+  }
+  .layout {
+    display: flex;
+    gap: 24px;
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+  .left-col, .right-col {
+    flex: 1 1 420px;
+    min-width: 320px;
+  }
+  .card {
+    background: var(--card);
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: 0 4px 16px rgba(17, 24, 39, 0.06);
+  }
+  .card h2 {
+    font-size: 1.15rem;
+    margin: 0 0 18px;
+  }
+  label {
+    display: block;
+    font-weight: 600;
+    margin: 16px 0 8px;
+    font-size: 0.9rem;
+  }
+  label:first-of-type { margin-top: 0; }
+  select, input[type="text"] {
+    width: 100%;
+    padding: 12px 14px;
+    font-size: 1rem;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: #fff;
+    color: var(--text);
+    appearance: none;
+  }
+  select {
+    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M5 7.5L10 12.5L15 7.5" stroke="%236b7280" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>');
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    padding-right: 36px;
+  }
+  input:focus, select:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(79, 91, 213, 0.15);
+  }
+  .pill-group {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 6px;
+  }
+  .pill {
+    flex: 1 1 auto;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 0.92rem;
+    font-weight: 500;
+    transition: border-color 0.15s, background 0.15s;
+  }
+  .pill input[type="radio"] {
+    width: auto;
+    accent-color: var(--primary);
+  }
+  .pill.checked {
+    border-color: var(--primary);
+    background: rgba(79, 91, 213, 0.06);
+  }
+  .hint {
+    color: var(--muted);
+    font-size: 0.82rem;
+    margin-top: 6px;
+  }
+  .button-row {
+    display: flex;
+    gap: 10px;
+    margin-top: 22px;
+  }
+  button {
+    padding: 13px 18px;
+    font-size: 1rem;
+    font-weight: 600;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+  }
+  .btn-primary {
+    flex: 1;
+    color: #fff;
+    background: var(--primary);
+  }
+  .btn-primary:active { background: var(--primary-dark); }
+  .btn-clear {
+    background: #eef0f4;
+    color: var(--text);
+  }
+  .btn-download {
+    width: 100%;
+    background: rgba(79, 91, 213, 0.1);
+    color: var(--primary);
+    margin-top: 18px;
+  }
+  .btn-download:hover { background: rgba(79, 91, 213, 0.18); }
+  .error {
+    color: var(--error);
+    font-weight: 600;
+    margin-top: 14px;
+    display: none;
+  }
+  .banner-success {
+    background: var(--success-bg);
+    color: var(--success-text);
+    font-weight: 600;
+    font-size: 0.92rem;
+    padding: 12px 16px;
+    border-radius: 10px;
+    margin-bottom: 18px;
+    display: none;
+  }
+  .result-placeholder {
+    text-align: center;
+    color: var(--muted);
+    padding: 60px 20px;
+  }
+  .barcode-frame {
+    background: var(--bg-start);
+    border-radius: 12px;
+    padding: 24px;
+    display: none;
+    text-align: center;
+  }
+  .barcode-frame canvas {
+    max-width: 100%;
+  }
+  .payload-box {
+    background: var(--dark-box);
+    color: var(--dark-box-text);
+    border-radius: 10px;
+    padding: 16px;
+    margin-top: 18px;
+    font-family: Consolas, "SF Mono", monospace;
+    font-size: 0.82rem;
+    display: none;
+  }
+  .payload-box .row {
+    margin-bottom: 10px;
+    word-break: break-all;
+  }
+  .payload-box .row:last-child { margin-bottom: 0; }
+  .payload-box .row-label {
+    color: #94a3b8;
+    font-weight: 600;
+    margin-bottom: 3px;
+  }
+  .form-section { display: none; }
+  .form-section.active { display: block; }
+  .footnote {
+    text-align: center;
+    color: var(--muted);
+    font-size: 0.78rem;
+    margin-top: 20px;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>Barcode Generator</h1>
+
+  <div class="layout">
+    <div class="left-col">
+      <div class="card">
+        <h2>Barcode Information</h2>
+
+        <label for="appSelect">Barcode Type</label>
+        <select id="appSelect">
+          <option value="code128">Code 128 Barcode</option>
+          <option value="gs1128">GS1-128 Barcode</option>
+        </select>
+
+        <!-- Code 128 Form -->
+        <div class="form-section" id="code128Form">
+          <label for="c128_appId">Application ID</label>
+          <select id="c128_appId">
+            <option value="11">11</option>
+            <option value="12">12</option>
+            <option value="13">13</option>
+            <option value="14">14</option>
+            <option value="15">15</option>
+          </select>
+
+          <label for="c128_order">Order Number (19 digits)</label>
+          <input type="text" id="c128_order" inputmode="numeric" maxlength="19" placeholder="Enter 19-digit order number" />
+
+          <label for="c128_loyalty">Loyalty Number (12 digits)</label>
+          <input type="text" id="c128_loyalty" inputmode="numeric" maxlength="12" placeholder="Enter 12-digit loyalty number" />
+
+          <div class="button-row">
+            <button class="btn-primary" onclick="generateCode128()">Generate Barcode</button>
+            <button class="btn-clear" onclick="clearCode128()">Clear</button>
+          </div>
+        </div>
+
+        <!-- GS1-128 Form -->
+        <div class="form-section" id="gs1128Form">
+          <label>Date AI</label>
+          <div class="pill-group" id="gs1_ai_group">
+            <label class="pill"><input type="radio" name="gs1_ai" value="15" /> 15 - Best before</label>
+            <label class="pill checked"><input type="radio" name="gs1_ai" value="16" checked /> 16 - Sell by</label>
+          </div>
+
+          <label for="gs1_item">13-digit Item Number</label>
+          <input type="text" id="gs1_item" inputmode="numeric" maxlength="13" placeholder="Enter 13-digit item number" />
+          <div class="hint">The 14th GTIN check digit is calculated automatically.</div>
+
+          <label for="gs1_date">Date</label>
+          <input type="text" id="gs1_date" placeholder="MM/DD/YYYY, YYYY-MM-DD, or YYMMDD" />
+          <div class="hint">Accepted: MM/DD/YYYY, YYYY-MM-DD, or YYMMDD</div>
+
+          <label>Item Sold By</label>
+          <div class="pill-group" id="gs1_saletype_group">
+            <label class="pill"><input type="radio" name="gs1_saletype" value="weight" /> Weight, AI 3202</label>
+            <label class="pill checked"><input type="radio" name="gs1_saletype" value="quantity" checked /> Quantity, AI 30</label>
+          </div>
+
+          <label id="gs1_measureLabel" for="gs1_measure">Quantity</label>
+          <input type="text" id="gs1_measure" placeholder="e.g. 3" />
+          <div class="hint" id="gs1_measureHint">Enter a whole number from 0 through 999. Example: 3 becomes 003.</div>
+
+          <div class="button-row">
+            <button class="btn-primary" onclick="generateGs1128()">Generate Barcode</button>
+            <button class="btn-clear" onclick="clearGs1128()">Clear</button>
+          </div>
+        </div>
+
+        <div class="error" id="errorBox"></div>
+      </div>
+    </div>
+
+    <div class="right-col">
+      <div class="card">
+        <h2>Generated Barcode</h2>
+
+        <div class="banner-success" id="successBanner"></div>
+
+        <div class="result-placeholder" id="placeholderBox">
+          Your generated barcode will appear here.
+        </div>
+
+        <div class="barcode-frame" id="barcodeFrame">
+          <canvas id="barcodeCanvas"></canvas>
+        </div>
+
+        <button class="btn-download" id="downloadBtn" style="display:none;" onclick="downloadBarcode()">Download PNG</button>
+
+        <div class="payload-box" id="payloadBox"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footnote">Runs entirely in your browser &mdash; no data is sent to a server.</div>
+</div>
+
+<script src="bwip-js-min.js"></script>
+<script>
+const appSelect = document.getElementById('appSelect');
+const code128Form = document.getElementById('code128Form');
+const gs1128Form = document.getElementById('gs1128Form');
+const errorBox = document.getElementById('errorBox');
+const successBanner = document.getElementById('successBanner');
+const placeholderBox = document.getElementById('placeholderBox');
+const barcodeFrame = document.getElementById('barcodeFrame');
+const barcodeCanvas = document.getElementById('barcodeCanvas');
+const downloadBtn = document.getElementById('downloadBtn');
+const payloadBox = document.getElementById('payloadBox');
+
+const APP_IDS = ["11", "12", "13", "14", "15"];
+
+function switchApp() {
+  const val = appSelect.value;
+  code128Form.classList.toggle('active', val === 'code128');
+  gs1128Form.classList.toggle('active', val === 'gs1128');
+  hideResult();
+}
+appSelect.addEventListener('change', switchApp);
+switchApp();
+
+function wirePillGroup(groupId) {
+  const group = document.getElementById(groupId);
+  const pills = group.querySelectorAll('.pill');
+  pills.forEach(pill => {
+    const radio = pill.querySelector('input[type="radio"]');
+    radio.addEventListener('change', () => {
+      pills.forEach(p => p.classList.remove('checked'));
+      pill.classList.add('checked');
+    });
+  });
+}
+wirePillGroup('gs1_ai_group');
+wirePillGroup('gs1_saletype_group');
+
+document.querySelectorAll('input[name="gs1_saletype"]').forEach(el => {
+  el.addEventListener('change', updateMeasureLabels);
+});
+function updateMeasureLabels() {
+  const type = document.querySelector('input[name="gs1_saletype"]:checked').value;
+  const label = document.getElementById('gs1_measureLabel');
+  const hint = document.getElementById('gs1_measureHint');
+  if (type === 'weight') {
+    label.textContent = 'Weight';
+    hint.textContent = 'Enter pounds with up to 2 decimals. Example: 12.34 becomes 001234.';
+  } else {
+    label.textContent = 'Quantity';
+    hint.textContent = 'Enter a whole number from 0 through 999. Example: 3 becomes 003.';
+  }
+}
+updateMeasureLabels();
+
+function showError(msg) {
+  errorBox.textContent = msg;
+  errorBox.style.display = 'block';
+  successBanner.style.display = 'none';
+  barcodeFrame.style.display = 'none';
+  downloadBtn.style.display = 'none';
+  payloadBox.style.display = 'none';
+  placeholderBox.style.display = 'block';
+}
+function hideResult() {
+  errorBox.style.display = 'none';
+  successBanner.style.display = 'none';
+  barcodeFrame.style.display = 'none';
+  downloadBtn.style.display = 'none';
+  payloadBox.style.display = 'none';
+  placeholderBox.style.display = 'block';
+}
+function showResult(successMsg, payloadRows) {
+  errorBox.style.display = 'none';
+  placeholderBox.style.display = 'none';
+
+  successBanner.textContent = successMsg;
+  successBanner.style.display = 'block';
+
+  barcodeFrame.style.display = 'block';
+  downloadBtn.style.display = 'block';
+
+  payloadBox.innerHTML = payloadRows.map(r =>
+    `<div class="row"><div class="row-label">${r.label}:</div>${r.value}</div>`
+  ).join('');
+  payloadBox.style.display = 'block';
+}
+
+// ---- Validation / encoding logic (ported from webapp.py) ----
+
+function calculateCheckDigit(item13) {
+  if (item13.length !== 13 || !/^\d{13}$/.test(item13)) {
+    throw new Error('The item number must contain exactly 13 digits.');
+  }
+  let total = 0;
+  const digits = item13.split('').reverse();
+  digits.forEach((d, idx) => {
+    const position = idx + 1;
+    total += parseInt(d, 10) * (position % 2 === 1 ? 3 : 1);
+  });
+  return String((10 - (total % 10)) % 10);
+}
+
+function formatDate(value) {
+  value = value.trim();
+  const patterns = [
+    { re: /^(\d{2})\/(\d{2})\/(\d{4})$/, fn: m => ({ y: m[3], mo: m[1], d: m[2] }) },
+    { re: /^(\d{4})-(\d{2})-(\d{2})$/, fn: m => ({ y: m[1], mo: m[2], d: m[3] }) },
+    { re: /^(\d{2})(\d{2})(\d{2})$/, fn: m => ({ y: '20' + m[1], mo: m[2], d: m[3] }) },
+  ];
+  for (const p of patterns) {
+    const m = value.match(p.re);
+    if (m) {
+      const { y, mo, d } = p.fn(m);
+      const date = new Date(Number(y), Number(mo) - 1, Number(d));
+      if (date.getFullYear() === Number(y) && (date.getMonth() + 1) === Number(mo) && date.getDate() === Number(d)) {
+        return y.slice(-2) + mo.padStart(2, '0') + d.padStart(2, '0');
+      }
+    }
+  }
+  throw new Error('Enter the date as MM/DD/YYYY, YYYY-MM-DD, or YYMMDD.');
+}
+
+function buildCode128Value(appId, order, loyalty) {
+  if (!APP_IDS.includes(appId)) {
+    throw new Error('Invalid Application ID.');
+  }
+  if (!/^\d{19}$/.test(order)) {
+    throw new Error('Order Number must be exactly 19 digits.');
+  }
+  if (!/^\d{12}$/.test(loyalty)) {
+    throw new Error('Loyalty Number must be exactly 12 digits.');
+  }
+  const barcodeValue = `2322${appId}${order}${loyalty}`;
+  if (barcodeValue.length !== 37) {
+    throw new Error(`Barcode length is ${barcodeValue.length}. Expected 37.`);
+  }
+  return barcodeValue;
+}
+
+function buildGs1Payload(dateAi, itemNumber, dateValue, saleType, measureValue) {
+  const item = itemNumber.trim();
+  const gtin14 = item + calculateCheckDigit(item);
+  const dateData = formatDate(dateValue);
+
+  if (dateAi !== '15' && dateAi !== '16') {
+    throw new Error('Select date AI 15 or 16.');
+  }
+
+  let encodedMeasure, readable, compact;
+  if (saleType === 'weight') {
+    const raw = measureValue.trim();
+    if (!/^\d+(\.\d{1,2})?$/.test(raw)) {
+      throw new Error('Weight must be numeric, for example 12.34.');
+    }
+    const weight = Math.round(parseFloat(raw) * 100);
+    if (weight < 0 || weight > 999999) {
+      throw new Error('Weight must be between 0 and 9999.99 pounds.');
+    }
+    encodedMeasure = String(weight).padStart(6, '0');
+    readable = `(01)${gtin14}(${dateAi})${dateData}(3202)${encodedMeasure}`;
+    compact = `01${gtin14}${dateAi}${dateData}3202${encodedMeasure}`;
+  } else {
+    const quantity = measureValue.trim();
+    if (!/^\d+$/.test(quantity) || Number(quantity) < 0 || Number(quantity) > 999) {
+      throw new Error('Quantity must be a whole number from 0 through 999.');
+    }
+    encodedMeasure = String(Number(quantity)).padStart(3, '0');
+    readable = `(01)${gtin14}(${dateAi})${dateData}(30)${encodedMeasure}`;
+    compact = `01${gtin14}${dateAi}${dateData}30${encodedMeasure}`;
+  }
+
+  return { readable, compact };
+}
+
+// ---- Rendering with bwip-js ----
+
+function renderCode128(value) {
+  bwipjs.toCanvas(barcodeCanvas, {
+    bcid: 'code128',
+    text: value,
+    scale: 3,
+    height: 20,
+    includetext: false,
+    backgroundcolor: 'FFFFFF',
+  });
+}
+
+function renderGs1128(compact) {
+  bwipjs.toCanvas(barcodeCanvas, {
+    bcid: 'gs1-128',
+    text: compact,
+    scale: 3,
+    height: 20,
+    includetext: false,
+    backgroundcolor: 'FFFFFF',
+    paddingwidth: 20,
+    paddingheight: 20,
+  });
+}
+
+function generateCode128() {
+  try {
+    const appId = document.getElementById('c128_appId').value;
+    const order = document.getElementById('c128_order').value.trim();
+    const loyalty = document.getElementById('c128_loyalty').value.trim();
+    const value = buildCode128Value(appId, order, loyalty);
+    renderCode128(value);
+    showResult('Code 128 Barcode generated successfully.', [
+      { label: 'Encoded', value },
+    ]);
+  } catch (e) {
+    showError(e.message);
+  }
+}
+
+function clearCode128() {
+  document.getElementById('c128_order').value = '';
+  document.getElementById('c128_loyalty').value = '';
+  hideResult();
+}
+
+function generateGs1128() {
+  try {
+    const dateAi = document.querySelector('input[name="gs1_ai"]:checked').value;
+    const itemNumber = document.getElementById('gs1_item').value.trim();
+    const dateValue = document.getElementById('gs1_date').value.trim();
+    const saleType = document.querySelector('input[name="gs1_saletype"]:checked').value;
+    const measureValue = document.getElementById('gs1_measure').value.trim();
+    const { readable, compact } = buildGs1Payload(dateAi, itemNumber, dateValue, saleType, measureValue);
+    renderGs1128(compact);
+    showResult('GS1-128 Barcode generated successfully.', [
+      { label: 'Readable', value: readable },
+      { label: 'Encoded', value: compact },
+    ]);
+  } catch (e) {
+    showError(e.message);
+  }
+}
+
+function clearGs1128() {
+  document.getElementById('gs1_item').value = '';
+  document.getElementById('gs1_measure').value = '';
+  document.getElementById('gs1_date').value = defaultDateString();
+  hideResult();
+}
+
+function downloadBarcode() {
+  const a = document.createElement('a');
+  a.href = barcodeCanvas.toDataURL('image/png');
+  a.download = 'barcode.png';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+}
+
+function defaultDateString() {
+  const d = new Date();
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  const yyyy = d.getFullYear();
+  return `${mm}/${dd}/${yyyy}`;
+}
+document.getElementById('gs1_date').value = defaultDateString();
+</script>
+</body>
+</html>
