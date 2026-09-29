@@ -515,7 +515,7 @@ function generateCode128() {
     const loyalty = document.getElementById('c128_loyalty').value.trim();
     const value = buildCode128Value(appId, order, loyalty);
     renderCode128(value);
-    showResult('Code 128 Barcode generated successfully.', [
+    showResult('Instacart Barcode generated successfully.', [
       { label: 'Encoded', value },
     ]);
   } catch (e) {
@@ -538,7 +538,7 @@ function generateGs1128() {
     const measureValue = document.getElementById('gs1_measure').value.trim();
     const { readable, compact } = buildGs1Payload(dateAi, itemNumber, dateValue, saleType, measureValue);
     renderGs1128(readable);
-    showResult('GS1-128 Barcode generated successfully.', [
+    showResult('Automated Markdown generated successfully.', [
       { label: 'Readable', value: readable },
       { label: 'Encoded', value: compact },
     ]);

@@ -397,7 +397,7 @@ async function generateCode128() {
     });
     const data = await res.json();
     if (!data.ok) { showError(data.error); return; }
-    showResult(data.image_url, 'Code 128 Barcode generated successfully.', [
+    showResult(data.image_url, 'Instacart Barcode generated successfully.', [
       { label: 'Encoded', value: data.value },
     ]);
   } catch (e) {
@@ -427,7 +427,7 @@ async function generateGs1128() {
     });
     const data = await res.json();
     if (!data.ok) { showError(data.error); return; }
-    showResult(data.image_url, 'GS1-128 Barcode generated successfully.', [
+    showResult(data.image_url, 'Automated Markdown generated successfully.', [
       { label: 'Readable', value: data.readable },
       { label: 'Encoded', value: data.compact },
     ]);

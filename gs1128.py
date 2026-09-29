@@ -187,7 +187,7 @@ class GS1128App(tk.Tk):
             self.preview_image = ImageTk.PhotoImage(preview)
             self.barcode_label.configure(image=self.preview_image)
             self.payload_display.set(f"GS1 payload: {readable}    Encoded data: {compact}")
-            self.status.set("GS1-128 barcode generated successfully. Display at 100% for scanning.")
+            self.status.set("Automated Markdown generated successfully. Display at 100% for scanning.")
         except Exception as error:
             self.status.set("Barcode generation failed.")
             messagebox.showerror("Unable to generate barcode", str(error))
