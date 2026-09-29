@@ -495,10 +495,10 @@ function renderCode128(value) {
   });
 }
 
-function renderGs1128(compact) {
+function renderGs1128(readable) {
   bwipjs.toCanvas(barcodeCanvas, {
     bcid: 'gs1-128',
-    text: compact,
+    text: readable,
     scale: 3,
     height: 20,
     includetext: false,
@@ -537,7 +537,7 @@ function generateGs1128() {
     const saleType = document.querySelector('input[name="gs1_saletype"]:checked').value;
     const measureValue = document.getElementById('gs1_measure').value.trim();
     const { readable, compact } = buildGs1Payload(dateAi, itemNumber, dateValue, saleType, measureValue);
-    renderGs1128(compact);
+    renderGs1128(readable);
     showResult('GS1-128 Barcode generated successfully.', [
       { label: 'Readable', value: readable },
       { label: 'Encoded', value: compact },
